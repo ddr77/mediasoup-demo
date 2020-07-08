@@ -28,7 +28,7 @@ const consumerDeviceCapabilities =
 			{
 				'level-asymmetry-allowed' : 1,
 				'packetization-mode'      : 1,
-				'profile-level-id'        : '4d0032'
+				'profile-level-id'        : '42e01f'
 			},
 			rtcpFeedback :
 			[
@@ -45,7 +45,7 @@ const consumerDeviceCapabilities =
 			clockRate            : 90000,
 			parameters           :
 			{
-				apt : 101
+				apt : 125
 			},
 			rtcpFeedback : []
 		}
