@@ -7,6 +7,102 @@ const Bot = require('./Bot');
 
 const logger = new Logger('Room');
 
+
+const consumerDeviceCapabilities =
+{
+	codecs :
+	[
+		{
+			mimeType             : 'audio/opus',
+			kind                 : 'audio',
+			preferredPayloadType : 100,
+			clockRate            : 48000,
+			channels             : 2
+		},
+		{
+			mimeType             : 'video/H264',
+			kind                 : 'video',
+			preferredPayloadType : 101,
+			clockRate            : 90000,
+			parameters           :
+			{
+				'level-asymmetry-allowed' : 1,
+				'packetization-mode'      : 1,
+				'profile-level-id'        : '4d0032'
+			},
+			rtcpFeedback :
+			[
+				{ type: 'nack', parameter: '' },
+				{ type: 'nack', parameter: 'pli' },
+				{ type: 'ccm', parameter: 'fir' },
+				{ type: 'goog-remb', parameter: '' }
+			]
+		},
+		{
+			mimeType             : 'video/rtx',
+			kind                 : 'video',
+			preferredPayloadType : 102,
+			clockRate            : 90000,
+			parameters           :
+			{
+				apt : 101
+			},
+			rtcpFeedback : []
+		}
+	],
+	headerExtensions :
+	[
+		{
+			kind             : 'audio',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId      : 1,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
+			preferredId      : 1,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
+			preferredId      : 2,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'audio',
+			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+			preferredId      : 4,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
+			preferredId      : 4,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'audio',
+			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
+			preferredId      : 10,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:3gpp:video-orientation',
+			preferredId      : 11,
+			preferredEncrypt : false
+		},
+		{
+			kind             : 'video',
+			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
+			preferredId      : 12,
+			preferredEncrypt : false
+		}
+	]
+};
+
 /**
  * Room class.
  *
@@ -990,7 +1086,7 @@ class Room extends EventEmitter
 				accept({ 
 					id: producer.id ,
 					//port: this.plainTranport.localPort
-					port: 123
+					port: _plainTranport.tuple.localPort
 				
 				});
 
@@ -999,7 +1095,7 @@ class Room extends EventEmitter
 	        plainnConsume=await this._plainTranport.consume(
 			{
 				producerId      : producer.id,
-				rtpCapabilities : rtpParameters,
+				rtpCapabilities : consumerDeviceCapabilities,
 				paused          : false
 			});
 							   
