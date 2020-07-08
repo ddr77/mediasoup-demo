@@ -1112,8 +1112,10 @@ class Room extends EventEmitter
 					port: plainTransport.tuple.localPort
 				
 				});
-				this._produceIndex++;
-	        // add a plain consumer
+
+			// add a plain consumer
+			if(this._produceIndex==0)
+			{
 	       let plainnConsume;
 	        plainnConsume=await plainTransport.consume(
 			{
@@ -1121,7 +1123,9 @@ class Room extends EventEmitter
 				rtpCapabilities : consumerDeviceCapabilities,
 				paused          : false
 			});
-							   
+		   }		
+		   
+		   this._produceIndex++;
 		//
 		//	accept({ 
 		//		id: producer.id ,
