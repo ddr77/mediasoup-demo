@@ -48,17 +48,27 @@ class Room extends EventEmitter
 
 		const bot = await Bot.create({ mediasoupRouter });
 
+		const  plainTranport = await mediasoupRouter.createPlainTransport(
+		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
+			rtcpMux    : true,
+			enableSctp : false,
+			appData    : { foo: 'bar' }
+		}
+
+		);
+
 		return new Room(
 			{
 				roomId,
 				protooRoom,
 				mediasoupRouter,
 				audioLevelObserver,
-				bot
+				bot,
+				plainTranport
 			});
 	}
 
-	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot })
+	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,plainTranport })
 	{
 		super();
 		this.setMaxListeners(Infinity);
@@ -101,6 +111,7 @@ class Room extends EventEmitter
 		// @type {Bot}
 		this._bot = bot;
 
+		this.plainTranport=plainTranport;
 		// Network throttled.
 		// @type {Boolean}
 		this._networkThrottled = false;
@@ -111,6 +122,10 @@ class Room extends EventEmitter
 		// For debugging.
 		global.audioLevelObserver = this._audioLevelObserver;
 		global.bot = this._bot;
+
+		//创建一个plaintransport
+
+		//创建一个plaintransport
 	}
 
 	/**
@@ -856,18 +871,6 @@ class Room extends EventEmitter
 				// Store the WebRtcTransport into the protoo Peer data Object.
 				peer.data.transports.set(transport.id, transport);
 
-
-				//createplaintransport
-
-				const playtransport = await this._mediasoupRouter.createPlainTransport(
-					{
-						listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
-						rtcpMux    : true,
-						enableSctp : false,
-						appData    : { foo: 'test' }
-					});
-           
-				//
 				accept(
 					{
 						id             : transport.id,
@@ -876,6 +879,7 @@ class Room extends EventEmitter
 						dtlsParameters : transport.dtlsParameters,
 						sctpParameters : transport.sctpParameters
 					});
+
 
 				const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
 
@@ -996,6 +1000,7 @@ class Room extends EventEmitter
 							producer
 						});
 				}
+
 
 				// Add into the audioLevelObserver.
 				if (producer.kind === 'audio')
@@ -1466,6 +1471,17 @@ class Room extends EventEmitter
 
 			return;
 		}
+		
+	   // add a plain consumer
+	   let plainnConsume;
+	   plainnConsume=await this.plainTranport.consume(
+			{
+				producerId      : producer.id,
+				rtpCapabilities : consumerPeer.data.rtpCapabilities,
+				paused          : false
+			});
+							   
+	    //
 
 		// Create the Consumer in paused mode.
 		let consumer;
