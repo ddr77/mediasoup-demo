@@ -998,9 +998,13 @@ class Room extends EventEmitter
 			});
 							   
 		//
+		//	accept({ 
+		//		id: producer.id ,
+		//		port : plainnConsume.tuple.localPort
+		//	});
+
 			accept({ 
-				id: producer.id ,
-				port : plainnConsume.tuple.localPort
+				id: producer.id 
 			});
 
 				// Optimization: Create a server-side Consumer for each Peer.
