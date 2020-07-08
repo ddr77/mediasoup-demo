@@ -52,7 +52,8 @@ class Room extends EventEmitter
 		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
 			rtcpMux    : true,
 			enableSctp : false,
-			appData    : { foo: 'bar' }
+			comedia:true
+			
 		}
 
 		);
@@ -111,7 +112,7 @@ class Room extends EventEmitter
 		// @type {Bot}
 		this._bot = bot;
 
-		this.plainTranport=plainTranport;
+		this._plainTranport=plainTranport;
 		// Network throttled.
 		// @type {Boolean}
 		this._networkThrottled = false;
@@ -995,7 +996,7 @@ class Room extends EventEmitter
 
 	        // add a plain consumer
 	       let plainnConsume;
-	        plainnConsume=await this.plainTranport.consume(
+	        plainnConsume=await this._plainTranport.consume(
 			{
 				producerId      : producer.id,
 				rtpCapabilities : rtpParameters,
