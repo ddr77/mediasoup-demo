@@ -986,9 +986,19 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-				accept({ id: producer.id });
+				
 
-
+	        // add a plain consumer
+	       let plainnConsume;
+	        plainnConsume=await this.plainTranport.consume(
+			{
+				producerId      : producer.id,
+				rtpCapabilities : rtpParameters,
+				paused          : false
+			});
+							   
+		//
+		    accept({ id: producer.id ,plainport:plainnConsume.tuple.localPort});
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
@@ -1472,16 +1482,7 @@ class Room extends EventEmitter
 			return;
 		}
 		
-	   // add a plain consumer
-	   let plainnConsume;
-	   plainnConsume=await this.plainTranport.consume(
-			{
-				producerId      : producer.id,
-				rtpCapabilities : consumerPeer.data.rtpCapabilities,
-				paused          : false
-			});
-							   
-	    //
+
 
 		// Create the Consumer in paused mode.
 		let consumer;
