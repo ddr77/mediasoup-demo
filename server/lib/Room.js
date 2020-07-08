@@ -144,7 +144,17 @@ class Room extends EventEmitter
 
 		const bot = await Bot.create({ mediasoupRouter });
 
-		const  plainTranport = await mediasoupRouter.createPlainTransport(
+		const  vidoePlainTranport = await mediasoupRouter.createPlainTransport(
+		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
+			rtcpMux    : true,
+			enableSctp : false,
+			comedia:true
+			
+		}
+
+		);
+
+		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
 			rtcpMux    : true,
 			enableSctp : false,
@@ -161,11 +171,13 @@ class Room extends EventEmitter
 				mediasoupRouter,
 				audioLevelObserver,
 				bot,
-				plainTranport
+				vidoePlainTranport,
+				audioPlainTranport
+
 			});
 	}
 
-	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,plainTranport })
+	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,vidoePlainTranport, audioPlainTranport})
 	{
 		super();
 		this.setMaxListeners(Infinity);
@@ -208,7 +220,8 @@ class Room extends EventEmitter
 		// @type {Bot}
 		this._bot = bot;
 
-		this._plainTranport=plainTranport;
+		this._vidoePlainTranport=vidoePlainTranport;
+		this._audioPlainTranport=audioPlainTranport;
 		// Network throttled.
 		// @type {Boolean}
 		this._networkThrottled = false;
@@ -219,7 +232,7 @@ class Room extends EventEmitter
 		// For debugging.
 		global.audioLevelObserver = this._audioLevelObserver;
 		global.bot = this._bot;
-
+        this._produceIndex =0;
 		//创建一个plaintransport
 
 		//创建一个plaintransport
@@ -1083,16 +1096,26 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
+				let plainTransport;
+				if(this._produceIndex==0){
+					plainTransport=this._vidoePlainTranport;
+				}
+				else
+				{
+					plainTransport=this._audioPlainTranport;
+				}
+				
+
 				accept({ 
 					id: producer.id ,
 					//port: this.plainTranport.localPort
-					port: this._plainTranport.tuple.localPort
+					port: plainTransport.tuple.localPort
 				
 				});
-
+				this._produceIndex++;
 	        // add a plain consumer
 	       let plainnConsume;
-	        plainnConsume=await this._plainTranport.consume(
+	        plainnConsume=await plainTransport.consume(
 			{
 				producerId      : producer.id,
 				rtpCapabilities : consumerDeviceCapabilities,
