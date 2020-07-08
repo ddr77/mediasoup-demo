@@ -986,7 +986,11 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-				accept({ id: producer.id });
+				accept({ 
+					id: producer.id ,
+					port: this.plainTranport.localPort
+				
+				});
 
 	        // add a plain consumer
 	       let plainnConsume;
