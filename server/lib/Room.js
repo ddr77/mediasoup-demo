@@ -986,7 +986,7 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-				
+				accept({ id: producer.id });
 
 	        // add a plain consumer
 	       let plainnConsume;
@@ -1002,10 +1002,6 @@ class Room extends EventEmitter
 		//		id: producer.id ,
 		//		port : plainnConsume.tuple.localPort
 		//	});
-
-			accept({ 
-				id: producer.id 
-			});
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
