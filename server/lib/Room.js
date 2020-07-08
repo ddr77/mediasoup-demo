@@ -856,6 +856,18 @@ class Room extends EventEmitter
 				// Store the WebRtcTransport into the protoo Peer data Object.
 				peer.data.transports.set(transport.id, transport);
 
+
+				//createplaintransport
+
+				const playtransport = await this._mediasoupRouter.createPlainTransport(
+					{
+						listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
+						rtcpMux    : true,
+						enableSctp : false,
+						appData    : { foo: 'test' }
+					});
+           
+				//
 				accept(
 					{
 						id             : transport.id,
@@ -873,6 +885,11 @@ class Room extends EventEmitter
 					try { await transport.setMaxIncomingBitrate(maxIncomingBitrate); }
 					catch (error) {}
 				}
+
+				//createtranpor
+
+
+				//
 
 				break;
 			}
@@ -966,6 +983,8 @@ class Room extends EventEmitter
 				});
 
 				accept({ id: producer.id });
+
+
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
