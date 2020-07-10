@@ -1116,13 +1116,18 @@ class Room extends EventEmitter
 			// add a plain consumer
 			if(this._produceIndex==0)
 			{
-	       let plainnConsume;
-	        plainnConsume=await plainTransport.consume(
-			{
-				producerId      : producer.id,
-				rtpCapabilities : consumerDeviceCapabilities,
-				paused          : false
-			});
+				let plainnConsume;
+				plainnConsume = await plainTransport.consume(
+					{
+						producerId: producer.id,
+						rtpCapabilities: consumerDeviceCapabilities,
+						paused: false
+					});
+
+				accept({
+					consumeid: plainnConsume.id,
+					consumerport: plainnConsume.port
+				});
 		   }		
 		   
 		   this._produceIndex++;
@@ -1141,11 +1146,6 @@ class Room extends EventEmitter
 							producerPeer : peer,
 							producer
 						});
-
-					accept({
-						consumeid: plainnConsume.id,
-						consumerport: plainnConsume.port
-					});
 				}
 
 
