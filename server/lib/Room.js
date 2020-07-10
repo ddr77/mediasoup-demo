@@ -144,7 +144,7 @@ class Room extends EventEmitter
 
 		const bot = await Bot.create({ mediasoupRouter });
 
-		const  vidoePlainTranport = await mediasoupRouter.createPlainTransport(
+		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
 			rtcpMux    : true,
 			enableSctp : false,
@@ -171,13 +171,13 @@ class Room extends EventEmitter
 				mediasoupRouter,
 				audioLevelObserver,
 				bot,
-				vidoePlainTranport,
+				videoPlainTranport,
 				audioPlainTranport
 
 			});
 	}
 
-	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,vidoePlainTranport, audioPlainTranport})
+	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,videoPlainTranport, audioPlainTranport})
 	{
 		super();
 		this.setMaxListeners(Infinity);
@@ -220,7 +220,7 @@ class Room extends EventEmitter
 		// @type {Bot}
 		this._bot = bot;
 
-		this._vidoePlainTranport=vidoePlainTranport;
+		this._videoPlainTranport=videoPlainTranport;
 		this._audioPlainTranport=audioPlainTranport;
 		// Network throttled.
 		// @type {Boolean}
@@ -1098,7 +1098,7 @@ class Room extends EventEmitter
 
 				let plainTransport;
 				if(this._produceIndex==0){
-					plainTransport=this._vidoePlainTranport;
+					plainTransport=this._videoPlainTranport;
 				}
 				else
 				{
@@ -1141,6 +1141,11 @@ class Room extends EventEmitter
 							producerPeer : peer,
 							producer
 						});
+
+					accept({
+						consumeid: plainnConsume.id,
+						consumerport: plainnConsume.port
+					});
 				}
 
 
