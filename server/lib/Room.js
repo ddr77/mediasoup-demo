@@ -15,7 +15,7 @@ const consumerDeviceCapabilities =
 		{
 			mimeType             : 'audio/opus',
 			kind                 : 'audio',
-			preferredPayloadType : 100,
+			preferredPayloadType : 111,
 			clockRate            : 48000,
 			channels             : 2
 		},
