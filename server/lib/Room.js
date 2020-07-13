@@ -1113,29 +1113,20 @@ class Room extends EventEmitter
 				
 				});
 
-			// add a plain consumer
-			if(this._produceIndex==0)
-			{
-				let plainnConsume;
-				plainnConsume = await plainTransport.consume(
-					{
-						producerId: producer.id,
-						rtpCapabilities: consumerDeviceCapabilities,
-						paused: false
-					});
-
-				accept({
-					consumeid: plainnConsume.id,
-					consumerport: plainnConsume.port
-				});
-		   }		
+				// add a plain consumer
+				if(this._produceIndex==0)
+				{
+					let plainnConsume;
+					plainnConsume = await plainTransport.consume(
+						{
+							producerId: producer.id,
+							rtpCapabilities: consumerDeviceCapabilities,
+							paused: false
+						});
+				}		
 		   
-		   this._produceIndex++;
-		//
-		//	accept({ 
-		//		id: producer.id ,
-		//		port : plainnConsume.tuple.localPort
-		//	});
+		   		this._produceIndex++;
+
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
