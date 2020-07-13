@@ -15,7 +15,7 @@ const consumerDeviceCapabilities =
 		{
 			mimeType             : 'audio/opus',
 			kind                 : 'audio',
-			preferredPayloadType : 111,
+			preferredPayloadType : 100,
 			clockRate            : 48000,
 			channels             : 2
 		},
@@ -148,25 +148,26 @@ class Room extends EventEmitter
 
 		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	
-			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-			rtcpMux    : true,
-			enableSctp : false,
-			comedia:true
+			listenIp   : { ip: '172.21.16.14', announcedIp: '49.232.189.68' },
+			//rtcpMux    : true,
+			//enableSctp : false,
+			//comedia:true
 			
-		}
-
-		);
+		});
+		await videoPlainTranport.connect(
+			{
+			  ip   : '172.16.1.102',
+			  port : 9998
+			});
 
 		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	
-			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-			rtcpMux    : true,
-			enableSctp : false,
-			comedia:true
+			listenIp   : { ip: '172.21.16.14', announcedIp: '49.232.189.68' },
+			//rtcpMux    : true,
+			//enableSctp : false,
+			//comedia:true
 			
-		}
-
-		);
+		});
 
 		return new Room(
 			{
