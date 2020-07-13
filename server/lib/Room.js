@@ -144,8 +144,11 @@ class Room extends EventEmitter
 
 		const bot = await Bot.create({ mediasoupRouter });
 
+		/*=====modify by =====*/
+
 		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
-		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
+		{	
+			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
 			rtcpMux    : true,
 			enableSctp : false,
 			comedia:true
@@ -155,7 +158,8 @@ class Room extends EventEmitter
 		);
 
 		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
-		{	listenIp   : { ip: '127.0.0.1', announcedIp: '49.232.189.68' },
+		{	
+			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
 			rtcpMux    : true,
 			enableSctp : false,
 			comedia:true
@@ -220,8 +224,6 @@ class Room extends EventEmitter
 		// @type {Bot}
 		this._bot = bot;
 
-		this._videoPlainTranport=videoPlainTranport;
-		this._audioPlainTranport=audioPlainTranport;
 		// Network throttled.
 		// @type {Boolean}
 		this._networkThrottled = false;
@@ -232,10 +234,15 @@ class Room extends EventEmitter
 		// For debugging.
 		global.audioLevelObserver = this._audioLevelObserver;
 		global.bot = this._bot;
-        this._produceIndex =0;
-		//创建一个plaintransport
 
-		//创建一个plaintransport
+		//======modify by glm=====
+		this._videoPlainTranport=videoPlainTranport;
+		this._audioPlainTranport=audioPlainTranport;
+		this._audioConsumer={};
+		//this._produceIndex =0;
+		this._PlainTransportCreated =false;
+		this._plainTransportConnected =false;
+		this._plainTransportConsumerCreated =false;
 	}
 
 	/**
@@ -1000,10 +1007,24 @@ class Room extends EventEmitter
 					catch (error) {}
 				}
 
-				//createtranpor
+				/*log */
+				//if(!this._PlainTransportCreated)
+				//{
+
+					let audioPlainTransport;
+					audioPlainTransport = this._audioPlainTranport;
+
+					// Store the audioPlainTransport into the protoo Peer data Object.
+					//peer.data.transports.set(audioPlainTransport.id, audioPlainTransport);
+
+					logger.debug(
+						'audioPlainTransport [id:%s, ip:%s, [port]:%o, tupleip:%s, tupleport:%o]',
+						audioPlainTransport.id, audioPlainTransport.ip, audioPlainTransport.port
+						,audioPlainTransport.tuple.ip,audioPlainTransport.tuple.port);
 
 
-				//
+				//	this._PlainTransportCreated = true;
+				//}
 
 				break;
 			}
@@ -1096,37 +1117,7 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-				let plainTransport;
-				if(this._produceIndex==0){
-					plainTransport=this._videoPlainTranport;
-				}
-				else
-				{
-					plainTransport=this._audioPlainTranport;
-				}
-				
-
-				accept({ 
-					id: producer.id ,
-					//port: this.plainTranport.localPort
-					port: plainTransport.tuple.localPort
-				
-				});
-
-				// add a plain consumer
-				if(this._produceIndex==0)
-				{
-					let plainnConsume;
-					plainnConsume = await plainTransport.consume(
-						{
-							producerId: producer.id,
-							rtpCapabilities: consumerDeviceCapabilities,
-							paused: false
-						});
-				}		
-		   
-		   		this._produceIndex++;
-
+				accept({ id: producer.id });
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
@@ -1139,13 +1130,42 @@ class Room extends EventEmitter
 						});
 				}
 
-
 				// Add into the audioLevelObserver.
 				if (producer.kind === 'audio')
 				{
 					this._audioLevelObserver.addProducer({ producerId: producer.id })
 						.catch(() => {});
 				}
+
+
+				//test
+				// add a plain consumer
+
+				if(!this._plainTransportConsumerCreated)
+				{
+					let audioPlainTransport;
+					audioPlainTransport=this._audioPlainTranport;
+	
+					// accept({ 
+					// 	id: producer.id ,
+					// 	localPort: audioPlainTransport.localPort,
+					// 	tupleLocalPort: audioPlainTransport.tuple.localPort
+					// });
+
+					let consumer;
+					consumer = await audioPlainTransport.consume({
+							producerId: producer.id,
+							rtpCapabilities: consumerDeviceCapabilities,
+							paused: false
+						});
+
+					this._audioConsumer = consumer;
+					// Store the Consumer into the protoo consumerPeer data Object.
+					//peer.data.consumers.set(consumer.id, consumer);
+
+					this._plainTransportConsumerCreated=true;	
+				}		
+				
 
 				break;
 			}
