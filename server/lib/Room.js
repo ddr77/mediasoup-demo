@@ -1011,16 +1011,16 @@ class Room extends EventEmitter
 				//if(!this._PlainTransportCreated)
 				//{
 
-					let audioPlainTransport;
-					audioPlainTransport = this._audioPlainTranport;
+					// let audioPlainTransport;
+					// audioPlainTransport = this._audioPlainTranport;
 
 					// Store the audioPlainTransport into the protoo Peer data Object.
 					//peer.data.transports.set(audioPlainTransport.id, audioPlainTransport);
 
-					logger.debug(
-						'audioPlainTransport [id:%s, ip:%s, [port]:%o, tupleip:%s, tupleport:%o]',
-						audioPlainTransport.id, audioPlainTransport.ip, audioPlainTransport.port
-						,audioPlainTransport.tuple.ip,audioPlainTransport.tuple.port);
+					// logger.debug(
+					// 	'audioPlainTransport [id:%s, ip:%s, [port]:%o, tupleip:%s, tupleport:%o]',
+					// 	audioPlainTransport.id, audioPlainTransport.ip, audioPlainTransport.port
+					// 	,audioPlainTransport.tuple.ip,audioPlainTransport.tuple.port);
 
 
 				//	this._PlainTransportCreated = true;
@@ -1141,16 +1141,22 @@ class Room extends EventEmitter
 				//test
 				// add a plain consumer
 
+				let audioPlainTransport;
+				audioPlainTransport=this._audioPlainTranport;
+
+				// accept({ 
+				// 	id: producer.id ,
+				// 	localPort: audioPlainTransport.localPort,
+				// 	tupleLocalPort: audioPlainTransport.tuple.localPort
+				// });
+
+				logger.debug(
+					'audioPlainTransport [id:%s, port:%s,tupleport:%s]',
+					audioPlainTransport.id, audioPlainTransport.port,audioPlainTransport.tuple.port);
+
+					
 				if(!this._plainTransportConsumerCreated)
 				{
-					let audioPlainTransport;
-					audioPlainTransport=this._audioPlainTranport;
-	
-					// accept({ 
-					// 	id: producer.id ,
-					// 	localPort: audioPlainTransport.localPort,
-					// 	tupleLocalPort: audioPlainTransport.tuple.localPort
-					// });
 
 					let consumer;
 					consumer = await audioPlainTransport.consume({
