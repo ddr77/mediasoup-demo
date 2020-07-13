@@ -1144,17 +1144,16 @@ class Room extends EventEmitter
 				let audioPlainTransport;
 				audioPlainTransport=this._audioPlainTranport;
 
-				// accept({ 
-				// 	id: producer.id ,
-				// 	localPort: audioPlainTransport.localPort,
-				// 	tupleLocalPort: audioPlainTransport.tuple.localPort
-				// });
+				accept({
+					tuplelocalPort: audioPlainTransport.localPort,
+					LocalPort: audioPlainTransport.tuple.localPort
+				});
 
-				logger.debug(
-					'audioPlainTransport [id:%s, port:%s,tupleport:%s]',
-					audioPlainTransport.id, audioPlainTransport.port,audioPlainTransport.tuple.port);
+				// logger.debug(
+				// 	'audioPlainTransport [id:%s, port:%s,tupleport:%s]',
+				// 	audioPlainTransport.id, audioPlainTransport.port,audioPlainTransport.tuple.port);
 
-					
+
 				if(!this._plainTransportConsumerCreated)
 				{
 
