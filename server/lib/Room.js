@@ -148,8 +148,8 @@ class Room extends EventEmitter
 
 		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
 			{	
-				listenIp    : config.mediasoup.webRtcTransport.listenIps[0],
-				//listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
+				//listenIp    : config.mediasoup.webRtcTransport.listenIps[0],
+				listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
 				//rtcpMux    : true,
 				//enableSctp : false,
 				//comedia:true
