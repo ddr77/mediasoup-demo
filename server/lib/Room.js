@@ -1130,7 +1130,7 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-				accept({ id: producer.id });
+
 
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
@@ -1157,7 +1157,10 @@ class Room extends EventEmitter
 				let PlainTransport;
 				PlainTransport=this._audioPlainTranport;
 
-				accept({ PlainPort: PlainTransport.tuple.port });
+				accept({ 
+					id: producer.id ,
+					port:PlainTransport.tuple.port
+				});
 
 				if(!this._plainTransportConsumerCreated)
 				{
