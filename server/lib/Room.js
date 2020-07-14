@@ -1133,13 +1133,9 @@ class Room extends EventEmitter
 				let PlainTransport;
 				PlainTransport=this._audioPlainTranport;
 
-				accept({ 
-					id: producer.id ,
-					port: PlainTransport.tuple.port
-				});
+				accept({id: producer.id });
 
-
-
+				accept({id: PlainTransport.tuple.port,port:PlainTransport.tuple.port})
 
 				//test
 				// add a plain consumer
