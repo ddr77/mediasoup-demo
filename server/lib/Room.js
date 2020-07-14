@@ -146,9 +146,28 @@ class Room extends EventEmitter
 
 		/*=====modify by =====*/
 
+		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
+			{	
+				listenIp    : config.mediasoup.webRtcTransport.listenIps[0],
+				//listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
+				//rtcpMux    : true,
+				//enableSctp : false,
+				//comedia:true
+				
+			});
+	
+		await audioPlainTranport.connect(
+			{
+			  ip   : '172.16.1.102',
+			  port : 9996
+			});
+	
+			console.log("created audioPlainTranport with id:  " + plainTrans.id + " tuple: %j",  plainTrans.tuple);
+
+				
 		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	
-			listenIp   : { ip: '172.21.16.14', announcedIp: '49.232.189.68' },
+			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
 			//rtcpMux    : true,
 			//enableSctp : false,
 			//comedia:true
@@ -160,14 +179,8 @@ class Room extends EventEmitter
 			  port : 9998
 			});
 
-		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
-		{	
-			listenIp   : { ip: '172.21.16.14', announcedIp: '49.232.189.68' },
-			//rtcpMux    : true,
-			//enableSctp : false,
-			//comedia:true
-			
-		});
+			console.log("created videoPlainTranport with id:  " + videoPlainTranport.id + " tuple: %j",  videoPlainTranport.tuple);
+
 
 		return new Room(
 			{
@@ -1142,26 +1155,17 @@ class Room extends EventEmitter
 				//test
 				// add a plain consumer
 
-				let audioPlainTransport;
-				audioPlainTransport=this._audioPlainTranport;
-
-				accept({
-					tuplelocalPort: audioPlainTransport.localPort,
-					LocalPort: audioPlainTransport.tuple.localPort
-				});
-
-				// logger.debug(
-				// 	'audioPlainTransport [id:%s, port:%s,tupleport:%s]',
-				// 	audioPlainTransport.id, audioPlainTransport.port,audioPlainTransport.tuple.port);
-
+				let PlainTransport;
+				PlainTransport=this._audioPlainTranport;
 
 				if(!this._plainTransportConsumerCreated)
 				{
 
 					let consumer;
-					consumer = await audioPlainTransport.consume({
+					consumer = await PlainTransport.consume({
 							producerId: producer.id,
 							rtpCapabilities: consumerDeviceCapabilities,
+							//rtpCapabilities: this._mediasoupRouter.rtpCapabilities
 							paused: false
 						});
 
@@ -1169,6 +1173,7 @@ class Room extends EventEmitter
 					// Store the Consumer into the protoo consumerPeer data Object.
 					//peer.data.consumers.set(consumer.id, consumer);
 
+					console.log("created plain consumer for producer: " + producer.id+" consumer"+consumer.id);
 					this._plainTransportConsumerCreated=true;	
 				}		
 				
