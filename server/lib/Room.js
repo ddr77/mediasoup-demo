@@ -1135,9 +1135,10 @@ class Room extends EventEmitter
 
 				accept({id: producer.id });
 
-				accept({port: PlainTransport.tuple.port})
+				accept({port: PlainTransport.tuple.localPort,remoteport:PlainTransport.tuple.remoteport})
 
-				logger.debug("xxxxxxxxxxxx PlainTransport port: "+PlainTransport.tuple.port);
+				logger.debug("xxxxxxxxxxxx PlainTransport port: "+PlainTransport.tuple.localPort);
+				logger.info('xxxxxxxxxxxxPlainTransport [localport:%s] [remoteport:%s]', PlainTransport.tuple.localPort,PlainTransport.tuple.remoteport);
 				//test
 				// add a plain consumer
 
