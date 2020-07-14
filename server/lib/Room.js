@@ -148,10 +148,9 @@ class Room extends EventEmitter
 
 		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
 			{	
-				//listenIp    : config.mediasoup.webRtcTransport.listenIps[0],
 				listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-				//rtcpMux    : true,
-				//enableSctp : false,
+				rtcpMux    : true,
+				enableSctp : false,
 				//comedia:true
 				
 			});
@@ -162,14 +161,14 @@ class Room extends EventEmitter
 			  port : 9996
 			});
 	
-			console.log("created audioPlainTranport with id:  " + plainTrans.id + " tuple: %j",  plainTrans.tuple);
+			//console.log("created audioPlainTranport with id:  " + plainTrans.id + " tuple: %j",  plainTrans.tuple);
 
 				
 		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
 		{	
 			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-			//rtcpMux    : true,
-			//enableSctp : false,
+			rtcpMux    : true,
+			enableSctp : false,
 			//comedia:true
 			
 		});
@@ -179,7 +178,7 @@ class Room extends EventEmitter
 			  port : 9998
 			});
 
-			console.log("created videoPlainTranport with id:  " + videoPlainTranport.id + " tuple: %j",  videoPlainTranport.tuple);
+			//console.log("created videoPlainTranport with id:  " + videoPlainTranport.id + " tuple: %j",  videoPlainTranport.tuple);
 
 
 		return new Room(
@@ -1158,6 +1157,8 @@ class Room extends EventEmitter
 				let PlainTransport;
 				PlainTransport=this._audioPlainTranport;
 
+				accept({ PlainPort: PlainTransport.tuple.port });
+
 				if(!this._plainTransportConsumerCreated)
 				{
 
@@ -1173,7 +1174,7 @@ class Room extends EventEmitter
 					// Store the Consumer into the protoo consumerPeer data Object.
 					//peer.data.consumers.set(consumer.id, consumer);
 
-					console.log("created plain consumer for producer: " + producer.id+" consumer"+consumer.id);
+					//.log("created plain consumer for producer: " + producer.id+" consumer"+consumer.id);
 					this._plainTransportConsumerCreated=true;	
 				}		
 				
