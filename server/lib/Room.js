@@ -1131,7 +1131,7 @@ class Room extends EventEmitter
 				});
 
 				let PlainTransport;
-				PlainTransport=this._audioPlainTranport;
+				PlainTransport=this._videoPlainTranport;
 
 				accept({id: producer.id });
 
@@ -1155,7 +1155,7 @@ class Room extends EventEmitter
 							paused: false
 						});
 
-					this._audioConsumer = consumer;
+					//this._audioConsumer = consumer;
 					// Store the Consumer into the protoo consumerPeer data Object.
 					//peer.data.consumers.set(consumer.id, consumer);
 
