@@ -1130,37 +1130,21 @@ class Room extends EventEmitter
 						producer.id, trace.type, trace);
 				});
 
-
-
-				// Optimization: Create a server-side Consumer for each Peer.
-				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
-				{
-					this._createConsumer(
-						{
-							consumerPeer : otherPeer,
-							producerPeer : peer,
-							producer
-						});
-				}
-
-				// Add into the audioLevelObserver.
-				if (producer.kind === 'audio')
-				{
-					this._audioLevelObserver.addProducer({ producerId: producer.id })
-						.catch(() => {});
-				}
-
-
-				//test
-				// add a plain consumer
-
 				let PlainTransport;
 				PlainTransport=this._audioPlainTranport;
 
 				accept({ 
 					id: producer.id ,
-					port:PlainTransport.tuple.port
+					port: PlainTransport.tuple.port
 				});
+
+
+
+
+				//test
+				// add a plain consumer
+
+
 
 				if(!this._plainTransportConsumerCreated)
 				{
@@ -1181,7 +1165,24 @@ class Room extends EventEmitter
 					this._plainTransportConsumerCreated=true;	
 				}		
 				
+				// Optimization: Create a server-side Consumer for each Peer.
+				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
+				{
+					this._createConsumer(
+						{
+							consumerPeer : otherPeer,
+							producerPeer : peer,
+							producer
+						});
+				}
 
+				// Add into the audioLevelObserver.
+				if (producer.kind === 'audio')
+				{
+					this._audioLevelObserver.addProducer({ producerId: producer.id })
+						.catch(() => {});
+				}
+				
 				break;
 			}
 
