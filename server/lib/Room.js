@@ -8,100 +8,27 @@ const Bot = require('./Bot');
 const logger = new Logger('Room');
 
 
-const consumerDeviceCapabilities =
-{
-	codecs :
-	[
-		{
-			mimeType             : 'audio/opus',
-			kind                 : 'audio',
-			preferredPayloadType : 100,
-			clockRate            : 48000,
-			channels             : 2
-		},
-		{
-			mimeType             : 'video/H264',
-			kind                 : 'video',
-			preferredPayloadType : 101,
-			clockRate            : 90000,
-			parameters           :
-			{
-				'level-asymmetry-allowed' : 1,
-				'packetization-mode'      : 1,
-				'profile-level-id'        : '42e01f'
-			},
-			rtcpFeedback :
-			[
-				{ type: 'nack', parameter: '' },
-				{ type: 'nack', parameter: 'pli' },
-				{ type: 'ccm', parameter: 'fir' },
-				{ type: 'goog-remb', parameter: '' }
-			]
-		},
-		{
-			mimeType             : 'video/rtx',
-			kind                 : 'video',
-			preferredPayloadType : 102,
-			clockRate            : 90000,
-			parameters           :
-			{
-				apt : 125
-			},
-			rtcpFeedback : []
-		}
-	],
-	headerExtensions :
-	[
-		{
-			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-			preferredId      : 1,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:mid',
-			preferredId      : 1,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:sdes:rtp-stream-id',
-			preferredId      : 2,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'audio',
-			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 4,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'http://www.webrtc.org/experiments/rtp-hdrext/abs-send-time', // eslint-disable-line max-len
-			preferredId      : 4,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'audio',
-			uri              : 'urn:ietf:params:rtp-hdrext:ssrc-audio-level',
-			preferredId      : 10,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:3gpp:video-orientation',
-			preferredId      : 11,
-			preferredEncrypt : false
-		},
-		{
-			kind             : 'video',
-			uri              : 'urn:ietf:params:rtp-hdrext:toffset',
-			preferredId      : 12,
-			preferredEncrypt : false
-		}
-	]
-};
+const global = {
+	mediasoup: 
+	{
+	worker: null,
+	router: null,
+    // WebRTC connection with the browser
+    webrtc: {
+		recvTransport: null,
+		audioProducer: null,
+		videoProducer: null,
+	},		
+	  // RTP connection with recording process
+	rtp: {
+		audioTransport: null,
+		audioConsumer: null,
+		videoTransport: null,
+		videoConsumer: null,
+	  },
+	},
+  
+  };
 
 /**
  * Room class.
@@ -129,7 +56,7 @@ class Room extends EventEmitter
 		const protooRoom = new protoo.Room();
 
 		// Router media codecs.
-		const { mediaCodecs } = config.mediasoup.routerOptions;
+		const { mediaCodecs } = config.mediasoup.customRouterOptions;
 
 		// Create a mediasoup Router.
 		const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
@@ -145,42 +72,89 @@ class Room extends EventEmitter
 		const bot = await Bot.create({ mediasoupRouter });
 
 		/*=====modify by =====*/
-
-		const  audioPlainTranport = await mediasoupRouter.createPlainTransport(
-			{	
-				listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-				rtcpMux    : true,
-				enableSctp : false,
-				//comedia:true
+		const useAudio = true;
+		const useVideo = true;
+		//////audio rtp transport
+		if(useAudio)
+		{
+			const  rtpTransport = await mediasoupRouter.createPlainTransport({ 
+				listenIp: config.mediasoup.plainTransportOptions.listenIp,
+				// No RTP will be received from the remote side
+				comedia: false,
+  
+				// FFmpeg and GStreamer don't support RTP/RTCP multiplexing ("a=rtcp-mux" in SDP)
+				rtcpMux: false,	
 				
+			   });
+		  global.mediasoup.rtp.audioTransport = rtpTransport;
+		  
+		  await rtpTransport.connect({
+				ip   : config.mediasoup.customConsumer.ip,
+				port : config.mediasoup.customConsumer.audioPort,
+				rtcpPort: config.mediasoup.customConsumer.audioPortRtcp,
+		  });
+  
+		  console.log(
+			  "mediasoup AUDIO RTP SEND transport connected: %s:%d <--> %s:%d (%s)",
+			  rtpTransport.tuple.localIp,
+			  rtpTransport.tuple.localPort,
+			  rtpTransport.tuple.remoteIp,
+			  rtpTransport.tuple.remotePort,
+			  rtpTransport.tuple.protocol
+		  );
+  
+		  console.log(
+			  "mediasoup AUDIO RTCP SEND transport connected: %s:%d <--> %s:%d (%s)",
+			  rtpTransport.rtcpTuple.localIp,
+			  rtpTransport.rtcpTuple.localPort,
+			  rtpTransport.rtcpTuple.remoteIp,
+			  rtpTransport.rtcpTuple.remotePort,
+			  rtpTransport.rtcpTuple.protocol
+		  );
+
+
+		}
+		
+		//////video rtp transport
+		if (useVideo) 
+		{
+			const rtpTransport = await router.createPlainTransport({
+				listenIp: config.mediasoup.plainTransportOptions.listenIp,
+			    // No RTP will be received from the remote side
+				comedia: false,
+		
+			    // FFmpeg and GStreamer don't support RTP/RTCP multiplexing ("a=rtcp-mux" in SDP)
+				rtcpMux: false,
 			});
-	
-		await audioPlainTranport.connect(
-			{
-			  ip   : '172.16.1.102',
-			  port : 9996
+			global.mediasoup.rtp.videoTransport = rtpTransport;
+		
+			await rtpTransport.connect({
+			  ip: config.mediasoup.customConsumer.ip,
+			  port: config.mediasoup.customConsumer.videoPort,
+			  rtcpPort: config.mediasoup.customConsumer.videoPortRtcp,
 			});
-	
-			//console.log("created audioPlainTranport with id:  " + plainTrans.id + " tuple: %j",  plainTrans.tuple);
+		
+			console.log(
+			  "mediasoup VIDEO RTP SEND transport connected: %s:%d <--> %s:%d (%s)",
+			  rtpTransport.tuple.localIp,
+			  rtpTransport.tuple.localPort,
+			  rtpTransport.tuple.remoteIp,
+			  rtpTransport.tuple.remotePort,
+			  rtpTransport.tuple.protocol
+			);
+		
+			console.log(
+			  "mediasoup VIDEO RTCP SEND transport connected: %s:%d <--> %s:%d (%s)",
+			  rtpTransport.rtcpTuple.localIp,
+			  rtpTransport.rtcpTuple.localPort,
+			  rtpTransport.rtcpTuple.remoteIp,
+			  rtpTransport.rtcpTuple.remotePort,
+			  rtpTransport.rtcpTuple.protocol
+			);
+		
 
-				
-		const  videoPlainTranport = await mediasoupRouter.createPlainTransport(
-		{	
-			listenIp   : { ip: '0.0.0.0', announcedIp: '49.232.189.68' },
-			rtcpMux    : true,
-			enableSctp : false,
-			//comedia:true
-			
-		});
-		await videoPlainTranport.connect(
-			{
-			  ip   : '172.16.1.102',
-			  port : 9998
-			});
-
-			//console.log("created videoPlainTranport with id:  " + videoPlainTranport.id + " tuple: %j",  videoPlainTranport.tuple);
-
-
+		}
+		
 		return new Room(
 			{
 				roomId,
@@ -188,13 +162,13 @@ class Room extends EventEmitter
 				mediasoupRouter,
 				audioLevelObserver,
 				bot,
-				videoPlainTranport,
-				audioPlainTranport
+//				videoPlainTranport,
+//				audioPlainTranport
 
 			});
 	}
 
-	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot,videoPlainTranport, audioPlainTranport})
+	constructor({ roomId, protooRoom, mediasoupRouter, audioLevelObserver, bot/*,videoPlainTranport, audioPlainTranport*/})
 	{
 		super();
 		this.setMaxListeners(Infinity);
@@ -249,13 +223,13 @@ class Room extends EventEmitter
 		global.bot = this._bot;
 
 		//======modify by glm=====
-		this._videoPlainTranport=videoPlainTranport;
-		this._audioPlainTranport=audioPlainTranport;
-		this._audioConsumer={};
+		//this._videoPlainTranport=videoPlainTranport;
+		//this._audioPlainTranport=audioPlainTranport;
+		//this._audioConsumer={};
 		//this._produceIndex =0;
-		this._PlainTransportCreated =false;
-		this._plainTransportConnected =false;
-		this._plainTransportConsumerCreated =false;
+		//this._PlainTransportCreated =false;
+		//this._plainTransportConnected =false;
+		//this._plainTransportConsumerCreated =false;
 	}
 
 	/**
@@ -296,6 +270,8 @@ class Room extends EventEmitter
 			this._mediasoupRouter._transports.size); // NOTE: Private API.
 	}
 
+
+	
 	/**
 	 * Called from server.js upon a protoo WebSocket connection request from a
 	 * browser.
@@ -1020,25 +996,6 @@ class Room extends EventEmitter
 					catch (error) {}
 				}
 
-				/*log */
-				//if(!this._PlainTransportCreated)
-				//{
-
-					// let audioPlainTransport;
-					// audioPlainTransport = this._audioPlainTranport;
-
-					// Store the audioPlainTransport into the protoo Peer data Object.
-					//peer.data.transports.set(audioPlainTransport.id, audioPlainTransport);
-
-					// logger.debug(
-					// 	'audioPlainTransport [id:%s, ip:%s, [port]:%o, tupleip:%s, tupleport:%o]',
-					// 	audioPlainTransport.id, audioPlainTransport.ip, audioPlainTransport.port
-					// 	,audioPlainTransport.tuple.ip,audioPlainTransport.tuple.port);
-
-
-				//	this._PlainTransportCreated = true;
-				//}
-
 				break;
 			}
 
@@ -1097,6 +1054,15 @@ class Room extends EventEmitter
 						// keyFrameRequestDelay: 5000
 					});
 
+					switch (producer.kind){
+						case "audio":
+							global.mediasoup.webrtc.audioProducer = producer;
+							break;
+						case "video":
+							global.mediasoup.webrtc.videoProducer = producer;
+							break;
+
+					}
 				// Store the Producer into the protoo Peer data Object.
 				peer.data.producers.set(producer.id, producer);
 
@@ -1129,39 +1095,7 @@ class Room extends EventEmitter
 						'producer "trace" event [producerId:%s, trace.type:%s, trace:%o]',
 						producer.id, trace.type, trace);
 				});
-
-				let PlainTransport;
-				PlainTransport=this._videoPlainTranport;
-
 				accept({id: producer.id });
-
-				accept({port: PlainTransport.tuple.localPort,remoteport:PlainTransport.tuple.remoteport})
-
-				logger.debug("xxxxxxxxxxxx PlainTransport port: "+PlainTransport.tuple.localPort);
-				logger.info('xxxxxxxxxxxxPlainTransport [localport:%s] [remoteport:%s]', PlainTransport.tuple.localPort,PlainTransport.tuple.remoteport);
-				//test
-				// add a plain consumer
-
-
-
-				if(!this._plainTransportConsumerCreated)
-				{
-
-					let consumer;
-					consumer = await PlainTransport.consume({
-							producerId: producer.id,
-							rtpCapabilities: consumerDeviceCapabilities,
-							//rtpCapabilities: this._mediasoupRouter.rtpCapabilities
-							paused: false
-						});
-
-					//this._audioConsumer = consumer;
-					// Store the Consumer into the protoo consumerPeer data Object.
-					//peer.data.consumers.set(consumer.id, consumer);
-
-					//.log("created plain consumer for producer: " + producer.id+" consumer"+consumer.id);
-					this._plainTransportConsumerCreated=true;	
-				}		
 				
 				// Optimization: Create a server-side Consumer for each Peer.
 				for (const otherPeer of this._getJoinedPeers({ excludePeer: peer }))
@@ -1180,8 +1114,66 @@ class Room extends EventEmitter
 					this._audioLevelObserver.addProducer({ producerId: producer.id })
 						.catch(() => {});
 				}
+
+				//add by glm				
+				if (producer.kind === 'audio') {
+					const rtpTransport = global.mediasoup.rtp.audioTransport;
+					const rtpConsumer = await rtpTransport.consume({
+						producerId: global.mediasoup.webrtc.audioProducer.id,
+						rtpCapabilities: this._mediasoupRouter.rtpCapabilities,//router.rtpCapabilities, // Assume the recorder supports same formats as mediasoup's router
+						paused: true,
+					});
+					global.mediasoup.rtp.audioConsumer = rtpConsumer;
+
+					console.log(
+						"mediasoup AUDIO RTP SEND consumer created, kind: %s, type: %s, paused: %s, SSRC: %s CNAME: %s",
+						rtpConsumer.kind,
+						rtpConsumer.type,
+						rtpConsumer.paused,
+						rtpConsumer.rtpParameters.encodings[0].ssrc,
+						rtpConsumer.rtpParameters.rtcp.cname
+					);
+				}
+
+				if (producer.kind === 'video') {
+					const rtpTransport = global.mediasoup.rtp.videoTransport;
+					const rtpConsumer = await rtpTransport.consume({
+						producerId: global.mediasoup.webrtc.videoProducer.id,
+						rtpCapabilities: this._mediasoupRouter.rtpCapabilities,//router.rtpCapabilities, // Assume the recorder supports same formats as mediasoup's router
+						paused: true,
+					  });
+					  global.mediasoup.rtp.videoConsumer = rtpConsumer;
+				  
+					  console.log(
+						"mediasoup VIDEO RTP SEND consumer created, kind: %s, type: %s, paused: %s, SSRC: %s CNAME: %s",
+						rtpConsumer.kind,
+						rtpConsumer.type,
+						rtpConsumer.paused,
+						rtpConsumer.rtpParameters.encodings[0].ssrc,
+						rtpConsumer.rtpParameters.rtcp.cname
+					  );
+				}	
 				
-				break;
+				if (producer.kind === 'audio') {
+					const consumer = global.mediasoup.rtp.audioConsumer;
+					console.log(
+					  "Resume mediasoup RTP consumer, kind: %s, type: %s",
+					  consumer.kind,
+					  consumer.type
+					);
+					consumer.resume();
+				  }
+				  if (producer.kind === 'video') {
+					const consumer = global.mediasoup.rtp.videoConsumer;
+					console.log(
+					  "Resume mediasoup RTP consumer, kind: %s, type: %s",
+					  consumer.kind,
+					  consumer.type
+					);
+					consumer.resume();
+				  }
+
+				break;			
 			}
 
 			case 'closeProducer':
